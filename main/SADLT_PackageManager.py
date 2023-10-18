@@ -1,7 +1,7 @@
 import sys
 import subprocess
 
-Packages = ['numpy', 'tk', 'tensorflow', 'pandas']
+Packages = ['opencv', 'pillow', 'numpy', 'tk', 'tensorflow', 'pandas']
 
 # implement conda as a subprocess:
 for element in Packages:
