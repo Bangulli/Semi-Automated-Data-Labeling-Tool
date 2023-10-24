@@ -24,6 +24,7 @@ class SADLT(tk.Tk):
         self._internal_cwd_path = os.getcwd() # stores the current working directory from which images are loaded
         self._internal_working_image_cv2 = None
         self._internal_working_image_tk = None
+        self._internal_detections = []
 
         # everything else we need to do for the app here
         self.create_widgets()
@@ -51,8 +52,7 @@ class SADLT(tk.Tk):
         self.lbx_files.bind('<<ListboxSelect>>', self.loadImage)
         self.lbx_files.pack()
         # button to trigger the processing of a single image
-        self.btn_process = tk.Button(self.frm_file_loader, text='Process', command=core.lorem_ipsum)
-        self.btn_process.pack()
+
 
         # the main canvas for display options
         self.cnv_main = tk.Canvas(self.frm_display, width=1026, height=1026, bg='white')
@@ -64,6 +64,12 @@ class SADLT(tk.Tk):
         # listbox that contains the found frames. select one for further processing like moving and shit
         self.lbx_detected = tk.Listbox(self.frm_labeling, height=20, width=40, selectmode=tk.SINGLE)
         self.lbx_detected.pack()
+
+        self.btn_create = tk.Button(self.frm_labeling, text='Create', command=lambda: self.createBbox(1,1,10,10, 'peter'))
+        self.btn_create.pack()
+
+        self.btn_expand_width = tk.Button(self.frm_labeling, text='Expand Width', command=lambda: self.changeBboxWidth(1))
+        self.btn_expand_width.pack()
         # need another thing to trigger the creation of a new frame
 
     def browseFiles(self): # method for file browsing. The path gets returned to a class attribute
@@ -86,8 +92,22 @@ class SADLT(tk.Tk):
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
+    def createBbox(self, x, y, w, h, label): # method for creating new boundingboxes
+        try:
+            newBbox=core.bbox(x, y, w, h, self.cnv_main, label)
+            self._internal_detections.append(newBbox) # append object to detection list
+            self.lbx_detected.insert('end', newBbox.label)
+        except Exception as error: # catch and call error handling
+            self.handleError(error)
+
+    def changeBboxWidth(self, margin):
+        try:
+            [elem.changeWidth(margin) for elem in self._internal_detections if elem.label == self.lbx_detected.get(self.lbx_detected.curselection())]
+        except Exception as error: # catch and call error handling
+            self.handleError(error)
+
     def handleError(self, error): # error handling, logs error and updates in app signifier, set log saver true
-        self.logger.write(datetime.datetime.now().strftime('%H:%M:%S')+' - Caught an Exception of type '+ type(error).__name__ + ' with message: '+error+ '\n')
+        self.logger.write(datetime.datetime.now().strftime('%H:%M:%S')+' - Caught an Exception of type '+ type(error).__name__ + ' with message: '+str(error)+'\n')
         self.lbl_failState.config(text='Failed', bg='red', width=10)
         self.save_log = True
 
