@@ -26,7 +26,7 @@ class SADLT(tk.Tk):
         self._internal_working_image_tk = None
         self._internal_detections = []
         # the list of possible labels
-        self._label_types = ['Person', 'Dog', 'Horse', 'Car', 'Bus', 'Truck']
+        self._label_types = ['Person', 'Dog', 'Horse', 'Car', 'Bus', 'Truck'] # stand in, later call this from the actual used net
         # The variable to store the dpd selcetion
         self._dpd_label_type_selection = tk.StringVar()
         self._dpd_label_type_selection.set(self._label_types[0])
@@ -133,7 +133,9 @@ class SADLT(tk.Tk):
         # button to cotract height
         self.btn_contract_height = tk.Button(self.frm_transform, text='Height-', width=6, command=lambda: self.changeBboxHeight(-1))
         self.btn_contract_height.grid(column=1, row=1)
-        # need another thing to trigger the creation of a new frame
+        # button to save all the data to a txt file
+        self.btn_save_labels = tk.Button(self.frm_labeling, text='Save', command=self.saveLabels)
+        self.btn_save_labels.pack()
 
     def browseFiles(self): # method for file browsing. The path gets returned to a class attribute
         try:
@@ -162,34 +164,34 @@ class SADLT(tk.Tk):
 
     def createBbox(self, x, y, w, h, label): # method for creating new boundingboxes
         try:
-            label = label + str(len(self._internal_detections))
-            newBbox=core.bbox(x, y, w, h, self.cnv_main, label)
+            identifier = label + str(len(self._internal_detections))
+            newBbox=core.bbox(x, y, w, h, self.cnv_main, label, identifier)
             self._internal_detections.append(newBbox) # append object to detection list
-            self.lbx_detected.insert('end', newBbox.label)
+            self.lbx_detected.insert('end', newBbox.identifier)
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
     def changeBboxWidth(self, margin): # proxy to call the width change method on an element of the bbox list
         try:
-            [elem.changeWidth(margin) for elem in self._internal_detections if elem.label == self.lbx_detected.get(self.lbx_detected.curselection())]
+            [elem.changeWidth(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
     def changeBboxHeight(self, margin): # proxy to call the height change method on an element of the bbox list
         try:
-            [elem.changeHeight(margin) for elem in self._internal_detections if elem.label == self.lbx_detected.get(self.lbx_detected.curselection())]
+            [elem.changeHeight(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
     def translateBboxHorizontally(self, margin):  # proxy to call the horizontal translate method on an element of the bbox list
         try:
-            [elem.translateHorizontally(margin) for elem in self._internal_detections if elem.label == self.lbx_detected.get(self.lbx_detected.curselection())]
+            [elem.translateHorizontally(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
     def translateBboxVertically(self, margin): # proxy to call the vertical translate method on an element of the bbox list
         try:
-            [elem.translateVertically(margin) for elem in self._internal_detections if elem.label == self.lbx_detected.get(self.lbx_detected.curselection())]
+            [elem.translateVertically(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
@@ -197,6 +199,16 @@ class SADLT(tk.Tk):
         try:
             self._x_origin.set(event.x)
             self._y_origin.set(event.y)
+        except Exception as error:  # catch and call error handling
+            self.handleError(error)
+
+    def saveLabels(self): # saves the labels to a file, with a name fitting the corresponding image
+        try:
+            imname = self.lbx_files.get(self.lbx_files.curselection()).removesuffix('.png').removesuffix('.jpg').removesuffix('.jpeg') # get image name without file extension
+            with open(os.path.join(self._internal_cwd_path, imname+'_Labels.txt'), 'w') as file: # create new txt file with a fitting name
+                file.write(self._internal_detections[0].getStringFormat()+'\n') # write the format to the file
+                [file.write(elem.toString()+'\n') for elem in self._internal_detections] # write the data of all bboxes to the file, fitting the previously stated format
+                file.close() # close file
         except Exception as error:  # catch and call error handling
             self.handleError(error)
 
