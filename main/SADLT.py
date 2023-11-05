@@ -7,6 +7,8 @@ import os
 import cv2
 import datetime
 
+from SADLT_AI import COCODetection
+
 # The main script for the GUI and controls of the application
 # This is where the Core methods are used
 # (S)emi (A)utomated (D)ata (L)abeling (T)ool
@@ -35,6 +37,9 @@ class SADLT(tk.Tk):
         self._x_origin.set(0)
         self._y_origin = tk.IntVar()
         self._y_origin.set(0)
+
+        # init the AI model
+        self.model = COCODetection()
 
         # everything else we need to do for the app here
         self.create_widgets()
@@ -133,6 +138,9 @@ class SADLT(tk.Tk):
         # button to cotract height
         self.btn_contract_height = tk.Button(self.frm_transform, text='Height-', width=6, command=lambda: self.changeBboxHeight(-1))
         self.btn_contract_height.grid(column=1, row=1)
+        # button to use yolov5 model to detect objects in the image
+        self.btn_yolo = tk.Button(self.frm_labeling, text='COCO Detection', command=self.coco_detection)
+        self.btn_yolo.pack()
         # button to save all the data to a txt file
         self.btn_save_labels = tk.Button(self.frm_labeling, text='Save', command=self.saveLabels)
         self.btn_save_labels.pack()
@@ -216,6 +224,16 @@ class SADLT(tk.Tk):
         self.logger.write(datetime.datetime.now().strftime('%H:%M:%S')+' - Caught an Exception of type '+ type(error).__name__ + ' with message: '+str(error)+'\n')
         self.lbl_failState.config(text='Failed', bg='red', width=10)
         self.save_log = True
+
+    def coco_detection(self):
+        """Predict bboxes using the COCO detection model from loaded image and display them in the canvas
+        """
+        try:
+            result = self.model.detect(self._internal_working_image_cv2)
+            # import pdb; pdb.set_trace()
+            [self.createBbox(elem[0], elem[1], elem[2]-elem[0], elem[3]-elem[1], self.model.classes[int(elem[5])]) for elem in result]
+        except Exception as error:
+            self.handleError(error)
 
 # Mainloop. When the script is called this part of the script runs
 if __name__ == '__main__':
