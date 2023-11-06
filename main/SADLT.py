@@ -2,10 +2,13 @@ import tkinter as tk
 import SADLT_Core as core
 from PIL import Image, ImageTk
 from tkinter import filedialog
+from tkinter import ttk
 import numpy as np
+
 import os
 import cv2
 import datetime
+import random
 
 from SADLT_AI import COCODetection
 
@@ -26,7 +29,9 @@ class SADLT(tk.Tk):
         self._internal_cwd_path = os.getcwd() # stores the current working directory from which images are loaded
         self._internal_working_image_cv2 = None
         self._internal_working_image_tk = None
+        self._internal_working_label = None
         self._internal_detections = []
+        self.previous_selection = None
         # the list of possible labels
         self._label_types = ['Person', 'Dog', 'Horse', 'Car', 'Bus', 'Truck'] # stand in, later call this from the actual used net
         # The variable to store the dpd selcetion
@@ -40,6 +45,8 @@ class SADLT(tk.Tk):
 
         # init the AI model
         self.model = COCODetection()
+        # list of colors for the bboxes
+        self.colors = ["#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]) for i in range(len(self.model.classes))]
 
         # everything else we need to do for the app here
         self.create_widgets()
@@ -61,17 +68,19 @@ class SADLT(tk.Tk):
         self.frm_file_loader.pack(side=tk.LEFT, anchor=tk.N)
         # list of png, jpg and jpeg files in the selected directory, select single images to load them into the canvas
         self.lbx_files = tk.Listbox(self.frm_file_loader, height=20, width=40, selectmode=tk.SINGLE)
-        self.lbx_files.bind('<<ListboxSelect>>', self.loadImage)
+        self.lbx_files.bind('<<ListboxSelect>>', self.lbx_files_on_select)
         self.lbx_files.pack()
         # the button to trigger file dialogue
         self.btn_select_working_directory = tk.Button(self.frm_file_loader, text='Browse', command=self.browseFiles)
         self.btn_select_working_directory.pack()
         # button to trigger the processing of a single image
 
-
         # the main canvas for display options
         self.cnv_main = tk.Canvas(self.frm_display, width=1026, height=1026, bg='white')
         self.cnv_main.bind('<Button-1>', self.getCoordsFromCanvas)
+        self.cnv_main.bind("<ButtonPress-1>", self.on_button_press)
+        self.cnv_main.bind("<B1-Motion>", self.on_move_press)
+        self.cnv_main.bind("<ButtonRelease-1>", self.on_button_release)
         self.cnv_main.pack(side=tk.LEFT)
 
         # sub frame for controls of labeling tools
@@ -83,67 +92,120 @@ class SADLT(tk.Tk):
         # frame for the creation controls
         self.frm_creation = tk.Frame(self.frm_labeling)
         self.frm_creation.pack()
-        # button to create a new frame
-        self.btn_create = tk.Button(self.frm_creation, text='Create', command=lambda: self.createBbox(self._x_origin.get(),self._y_origin.get(),10,10, self._dpd_label_type_selection.get()))
-        self.btn_create.pack()
-        # dropdown to select label type
-        self.dpd_label_type = tk.OptionMenu(self.frm_creation, self._dpd_label_type_selection, *self._label_types)
-        self.dpd_label_type.config(width=10)
-        self.dpd_label_type.pack()
-        # lbl x coord
-        self.lbl_x_coord_input = tk.Label(self.frm_creation, text='X Origin')
-        self.lbl_x_coord_input.pack()
-        # entry for x coord
-        self.ent_x = tk.Entry(self.frm_creation, textvariable=self._x_origin)
-        self.ent_x.pack()
-        # lbl Y coord
-        self.lbl_y_coord_input = tk.Label(self.frm_creation, text='Y Origin')
-        self.lbl_y_coord_input.pack()
-        # entry for y coord
-        self.ent_x = tk.Entry(self.frm_creation, textvariable=self._y_origin)
-        self.ent_x.pack()
-        # frame to contain the contorols for moving the selected bbox
-        self.frm_move = tk.Frame(self.frm_labeling)
-        self.frm_move.pack()
-        # label fyi
-        self.lbl_move = tk.Label(self.frm_move, text='Control Bounding Box position', width=30)
-        self.lbl_move.grid(columnspan=3, column=0, row=0)
-        # button to move right
-        self.btn_move_right = tk.Button(self.frm_move, text='Right', width=6, command=lambda: self.translateBboxHorizontally(1))
-        self.btn_move_right.grid(column=2, row=2)
-        # button to move left
-        self.btn_move_left = tk.Button(self.frm_move, text='Left', width=6, command=lambda: self.translateBboxHorizontally(-1))
-        self.btn_move_left.grid(column=0, row=2)
-        # button to move down
-        self.btn_move_down = tk.Button(self.frm_move, text='Down', width=6, command=lambda: self.translateBboxVertically(1))
-        self.btn_move_down.grid(column=1, row=3)
-        # button to move up
-        self.btn_move_up = tk.Button(self.frm_move, text='Up', width=6, command=lambda: self.translateBboxVertically(-1))
-        self.btn_move_up.grid(column=1, row=1)
-        # frame to contain the control for expanding/contracting the selected bbox
-        self.frm_transform = tk.Frame(self.frm_labeling)
-        self.frm_transform.pack()
-        # label for information
-        self.lbl_transform = tk.Label(self.frm_transform, text='Control Bounding Box Morphology', width = 30)
-        self.lbl_transform.grid(column=0, columnspan=3, row=0)
-        # button to expand width
-        self.btn_expand_width = tk.Button(self.frm_transform, text='Width+', width=6, command=lambda: self.changeBboxWidth(1))
-        self.btn_expand_width.grid(column=2, row=2)
-        # button to cotract width
-        self.btn_contract_width = tk.Button(self.frm_transform, text='Width-', width=6, command=lambda: self.changeBboxWidth(-1))
-        self.btn_contract_width.grid(column=0, row=2)
-        # button to expand height
-        self.btn_expand_height = tk.Button(self.frm_transform, text='Height+', width=6, command=lambda: self.changeBboxHeight(1))
-        self.btn_expand_height.grid(column=1, row=3)
-        # button to cotract height
-        self.btn_contract_height = tk.Button(self.frm_transform, text='Height-', width=6, command=lambda: self.changeBboxHeight(-1))
-        self.btn_contract_height.grid(column=1, row=1)
         # button to use yolov5 model to detect objects in the image
         self.btn_yolo = tk.Button(self.frm_labeling, text='COCO Detection', command=self.coco_detection)
         self.btn_yolo.pack()
+        # button to delete a label
+        self.btn_delete = tk.Button(self.frm_labeling, text='Delete', command=self.delete_selected_item)
+        self.btn_delete.pack()
+        # button to clear labels
+        self.btn_clear = tk.Button(self.frm_labeling, text='Clear Labels', command=self.clear_labels)
+        self.btn_clear.pack()
         # button to save all the data to a txt file
         self.btn_save_labels = tk.Button(self.frm_labeling, text='Save', command=self.saveLabels)
         self.btn_save_labels.pack()
+    
+    def lbx_files_on_select(self, event):
+        """Event handler for the file listbox
+
+        Args:
+            event (event): triggered event
+        """
+        # delete all entries in the detection listbox
+        current_selection = self.lbx_files.curselection()
+        if current_selection != self.previous_selection or self.previous_selection == None:
+            self.lbx_detected.delete('0', 'end')
+            # delete all entries in the bbox list
+            self._internal_detections = []
+            # delete all bbox from the canvas
+            self.cnv_main.delete('bbox')
+            self.loadImage()
+            self.loadLabels()
+        self.previous_selection = current_selection
+
+
+    def delete_selected_item(self):
+        """Delete the selected item from the listbox
+        """
+        selected = self.lbx_detected.curselection()
+        if selected:
+            # delete the bbox from the canvas and the listbox
+            index = selected[0]
+            self.lbx_detected.delete(selected)
+            # remove the bbox fr1om the canvas
+            self.cnv_main.delete(self._internal_detections[index].visu)
+            self._internal_detections.pop(index)
+    
+    def clear_labels(self):
+        """Clear all current bboxes
+        """
+        # delete all bbox
+        self.cnv_main.delete('bbox')
+        # clear list box
+        self.lbx_detected.delete('0', 'end')
+    
+
+    def on_button_press(self, event):
+        self.current_class = None
+        # save mouse drag start position
+        self.start_x = event.x
+        self.start_y = event.y
+
+        # create rectangle if not yet exist
+        # if not self.rect:
+        self.current_rect = self.cnv_main.create_rectangle(self.start_x, self.start_y, 1, 1, outline='red', tags='bbox')
+
+    def on_move_press(self, event):
+        curX, curY = (event.x, event.y)
+        # expand rectangle as you drag the mouse
+        self.cnv_main.coords(self.current_rect, self.start_x, self.start_y, curX, curY)
+
+    def on_button_release(self, event):
+        # save mouse drag end position
+        curX, curY = (event.x, event.y)
+        # create the drop down menu
+        self.create_dropdown_popup(curX, curY)
+    
+    def drop_down_select_cb(self, event, popup_window, curX, curY):
+        """Drop down menu to select class
+
+        Args:
+            event (event): triggered event
+            popup_window (toplevel): popup window
+            curX (x coord): mouse's x postition after release
+            curY (y coord): mouse's y postition after release
+        """
+        # get the selected class name
+        self.current_class = event.widget.get()
+        # destroy the popup window
+        popup_window.destroy()
+        # change the color of the bbox to the color of the class
+        self.cnv_main.itemconfig(self.current_rect, outline=self.colors[list(self.model.classes.values()).index(self.current_class)])
+        # create the bbox
+        self.createBbox(self.start_x, self.start_y, curX, curY, self.current_class, vis=False)
+    
+    def drop_down_on_close(self, popup_window):
+        """Drop down menu action on close"""
+        # destroy the popup window
+        popup_window.destroy()
+        # delete the current rectangle
+        self.cnv_main.delete(self.current_rect)
+        
+    def create_dropdown_popup(self, curX, curY):
+        # Create a new top-level window
+        popup = tk.Toplevel()
+        # Create a variable to hold the selected option
+        selected_option = tk.StringVar()
+        # Create the combobox
+        combobox = ttk.Combobox(popup, textvariable=selected_option, height=10)
+        # Add some options
+        combobox['values'] = list(self.model.classes.values())
+        # Set the default option
+        combobox.current(0)
+        combobox.bind("<<ComboboxSelected>>", lambda event: self.drop_down_select_cb(event, popup_window=popup, curX=curX, curY=curY))
+        popup.protocol("WM_DELETE_WINDOW", lambda: self.drop_down_on_close(popup))
+        # Pack the combobox
+        combobox.pack()
 
     def browseFiles(self): # method for file browsing. The path gets returned to a class attribute
         try:
@@ -157,7 +219,7 @@ class SADLT(tk.Tk):
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
-    def loadImage(self, event): # method for image loading, sets the internal variables for tk and cv2 format images
+    def loadImage(self): # method for image loading, sets the internal variables for tk and cv2 format images
         try:
             self._internal_working_image_cv2 = cv2.imread(os.path.join(self._internal_cwd_path, self.lbx_files.get(self.lbx_files.curselection()))) # load the image from disk using opencv
             self._internal_working_image_tk = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(self._internal_working_image_cv2, cv2.COLOR_BGR2RGB))) # write to a variable so the canvas has a constnat reference to display the image
@@ -169,37 +231,27 @@ class SADLT(tk.Tk):
             self.cnv_main.create_image(width/2, height/2, image=self._internal_working_image_tk)#Convert the image to tk usable and display in canvas. Spawned in top right corner, so canvas coords align with pixel coords of returned bboxes by model
         except Exception as error: # catch and call error handling
             self.handleError(error)
-
-    def createBbox(self, x, y, w, h, label): # method for creating new boundingboxes
+        
+    def loadLabels(self): 
+        """Load the labels from a txt file"""
+        try:
+            self._internal_working_label = os.path.splitext(os.path.join(self._internal_cwd_path, self.lbx_files.get(self.lbx_files.curselection())))[0] + '_Labels.txt' # load the label from disk using opencv
+            if os.path.isfile(self._internal_working_label):
+                lines = open(self._internal_working_label, 'r').readlines() # open the file
+                for i, line in enumerate(lines): # iterate over the lines in the file
+                    if i == 0:
+                        continue  
+                    label, x_origin, y_origin, width, height = line.split(',')
+                    self.createBbox(x_origin, y_origin, width, height, label) # create a bbox for each line in the file          
+        except Exception as error: # catch and call error handling
+            self.handleError(error)
+        
+    def createBbox(self, x, y, w, h, label, vis=True): # method for creating new boundingboxes
         try:
             identifier = label + str(len(self._internal_detections))
-            newBbox=core.bbox(x, y, w, h, self.cnv_main, label, identifier)
+            newBbox=core.bbox(x, y, w, h, self.cnv_main, label, identifier, self.colors[list(self.model.classes.values()).index(label)], vis)
             self._internal_detections.append(newBbox) # append object to detection list
             self.lbx_detected.insert('end', newBbox.identifier)
-        except Exception as error: # catch and call error handling
-            self.handleError(error)
-
-    def changeBboxWidth(self, margin): # proxy to call the width change method on an element of the bbox list
-        try:
-            [elem.changeWidth(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
-        except Exception as error: # catch and call error handling
-            self.handleError(error)
-
-    def changeBboxHeight(self, margin): # proxy to call the height change method on an element of the bbox list
-        try:
-            [elem.changeHeight(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
-        except Exception as error: # catch and call error handling
-            self.handleError(error)
-
-    def translateBboxHorizontally(self, margin):  # proxy to call the horizontal translate method on an element of the bbox list
-        try:
-            [elem.translateHorizontally(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
-        except Exception as error: # catch and call error handling
-            self.handleError(error)
-
-    def translateBboxVertically(self, margin): # proxy to call the vertical translate method on an element of the bbox list
-        try:
-            [elem.translateVertically(margin) for elem in self._internal_detections if elem.identifier == self.lbx_detected.get(self.lbx_detected.curselection())]
         except Exception as error: # catch and call error handling
             self.handleError(error)
 
@@ -229,8 +281,8 @@ class SADLT(tk.Tk):
         """Predict bboxes using the COCO detection model from loaded image and display them in the canvas
         """
         try:
+            self.cnv_main.delete('bbox')
             result = self.model.detect(self._internal_working_image_cv2)
-            # import pdb; pdb.set_trace()
             [self.createBbox(elem[0], elem[1], elem[2]-elem[0], elem[3]-elem[1], self.model.classes[int(elem[5])]) for elem in result]
         except Exception as error:
             self.handleError(error)
