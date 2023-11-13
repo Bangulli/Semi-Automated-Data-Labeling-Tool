@@ -1,2 +1,0 @@
-09:17:32 - Caught an Exception of type FileNotFoundError with message: [Errno 2] No such file or directory: ''
-09:17:33 - exited the application normally

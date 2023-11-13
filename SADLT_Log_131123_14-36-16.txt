@@ -1,2 +1,0 @@
-14:36:53 - Caught an Exception of type FileNotFoundError with message: [WinError 3] The system cannot find the path specified: ''
-14:37:54 - exited the application normally
