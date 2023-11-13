@@ -1,0 +1,3 @@
+14:24:22 - Caught an Exception of type TclError with message: bad listbox index "": must be active, anchor, end, @x,y, or a number
+14:24:22 - Caught an Exception of type TclError with message: bad listbox index "": must be active, anchor, end, @x,y, or a number
+14:24:27 - exited the application normally
