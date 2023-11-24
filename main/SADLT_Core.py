@@ -13,23 +13,40 @@ class bbox():
         self.canvas = canvas # the canvas the rectangle is drawn in
         self.label = label # the tag of the rectangle
         self.identifier = identifier
+        # create the textlabel in the canvas with background
+        self.cnv_text = self.canvas.create_text(self.x+self.w/2, self.y+5, text=self.identifier)
+        cnv_text_bg_x, cnv_text_bg_y, cnv_text_bg_x2, cnv_text_bg_y2 = self.canvas.bbox(self.cnv_text)
+        self.cnv_text_w = cnv_text_bg_x2-cnv_text_bg_x
+        self.cnv_text_h = cnv_text_bg_y2-cnv_text_bg_y
+        self.canvas.coords(self.cnv_text, self.x + self.cnv_text_w / 2, self.y + self.cnv_text_h/2)
+        self.cnv_text_bg = self.canvas.create_rectangle((self.x, self.y, self.x+self.cnv_text_w, self.y+self.cnv_text_h), fill=color, outline=color)
+        self.canvas.tag_lower(self.cnv_text_bg, self.cnv_text)
+        # create the bbox itself
         self.visu = vis if vis else canvas.create_rectangle(self.x, self.y, self.x+self.w, self.y+self.h, tags='bbox', outline=color) # the rectangle element of the canvas
 
     def changeWidth(self, margin):# expand/contract horizontally
         self.w += margin
         self.canvas.coords(self.visu, self.x, self.y, self.x+self.w, self.y+self.h)
+        self.canvas.coords(self.cnv_text_bg, self.x, self.y, self.x + self.cnv_text_w, self.y + self.cnv_text_h)
+        self.canvas.coords(self.cnv_text, self.x + self.cnv_text_w / 2, self.y + self.cnv_text_h/2)
 
     def changeHeight(self, margin):# expand/contract vertically
         self.h += margin
         self.canvas.coords(self.visu, self.x, self.y, self.x + self.w, self.y + self.h)
+        self.canvas.coords(self.cnv_text_bg, self.x, self.y, self.x + self.cnv_text_w, self.y + self.cnv_text_h)
+        self.canvas.coords(self.cnv_text, self.x + self.cnv_text_w / 2, self.y + self.cnv_text_h/2)
 
     def translateHorizontally(self, margin):# move horizontally
         self.x += margin
         self.canvas.coords(self.visu, self.x, self.y, self.x + self.w, self.y + self.h)
+        self.canvas.coords(self.cnv_text_bg, self.x, self.y, self.x + self.cnv_text_w, self.y + self.cnv_text_h)
+        self.canvas.coords(self.cnv_text, self.x + self.cnv_text_w / 2, self.y + self.cnv_text_h/2)
 
     def translateVertically(self, margin):# move vertically
         self.y += margin
         self.canvas.coords(self.visu, self.x, self.y, self.x + self.w, self.y + self.h)
+        self.canvas.coords(self.cnv_text_bg, self.x, self.y, self.x + self.cnv_text_w, self.y + self.cnv_text_h)
+        self.canvas.coords(self.cnv_text, self.x + self.cnv_text_w / 2, self.y + self.cnv_text_h/2)
 
     def toString(self): # method to return the data that uniquely identifies a bbox as a string so it can be printed to a txt file
         # stand in for now, fit this to some adequate syntax later
