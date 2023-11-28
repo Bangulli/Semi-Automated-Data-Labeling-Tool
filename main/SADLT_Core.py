@@ -55,6 +55,12 @@ class bbox():
     def getStringFormat(self): # returns a string that represents the .toString format in human readable
         return 'label, x origin, y origin, width, height'
 
+    def remove(self): #  method to remove a bbox with all its components from the canvas
+        self.canvas.delete(self.visu)
+        self.canvas.delete(self.cnv_text)
+        self.canvas.delete(self.cnv_text_bg)
+
+
 def lorem_ipsum():
     print('Lorem ipsum dolor sit amet, consectetur adipisici elit')
 

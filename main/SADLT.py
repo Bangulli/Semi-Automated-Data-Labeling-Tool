@@ -114,11 +114,7 @@ class SADLT(tk.Tk):
         # delete all entries in the detection listbox
         current_selection = self.lbx_files.curselection()
         if (current_selection != self.previous_selection or self.previous_selection == None) and len(current_selection):
-            self.lbx_detected.delete('0', 'end')
-            # delete all entries in the bbox list
-            self._internal_detections = []
-            # delete all bbox from the canvas
-            self.cnv_main.delete('bbox')
+            self.clear_labels() # clear all labels
             self.loadImage()
             self.loadLabels()
             self.lbl_failState.config(text='', width=10, background='SystemButtonFace')
@@ -134,14 +130,14 @@ class SADLT(tk.Tk):
             index = selected[0]
             self.lbx_detected.delete(selected)
             # remove the bbox fr1om the canvas
-            self.cnv_main.delete(self._internal_detections[index].visu)
+            self._internal_detections[index].remove()
             self._internal_detections.pop(index)
     
     def clear_labels(self):
         """Clear all current bboxes
         """
         # delete all bbox
-        self.cnv_main.delete('bbox')
+        [elem.remove() for elem in self._internal_detections]
         # clear list box
         self.lbx_detected.delete('0', 'end')
         self._internal_detections = []
@@ -225,10 +221,6 @@ class SADLT(tk.Tk):
         # try:
         self._internal_working_image_cv2 = cv2.imread(os.path.join(self._internal_cwd_path, self.lbx_files.get(self.lbx_files.curselection()))) # load the image from disk using opencv
         self._internal_working_image_tk = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(self._internal_working_image_cv2, cv2.COLOR_BGR2RGB))) # write to a variable so the canvas has a constnat reference to display the image
-        # delete all entries in the detection listbox
-        self.lbx_detected.delete('0', 'end')
-        # delete all entries in the bbox list
-        self._internal_detections = []
         height, width = self._internal_working_image_cv2.shape[:2]# gets the dimensions so we can determine the spawn point in canvas
         self.cnv_main.create_image(width/2, height/2, image=self._internal_working_image_tk)#Convert the image to tk usable and display in canvas. Spawned in top right corner, so canvas coords align with pixel coords of returned bboxes by model
         # except Exception as error: # catch and call error handling
