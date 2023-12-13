@@ -96,7 +96,7 @@ class SADLT(tk.Tk):
         self.btn_yolo = tk.Button(self.frm_labeling, text='COCO Detection', command=self.coco_detection)
         self.btn_yolo.pack()
         # button to delete a label
-        self.btn_delete = tk.Button(self.frm_labeling, text='Delete', command=self.delete_selected_item)
+        self.btn_delete = tk.Button(self.frm_labeling, text='Delete Selected', command=self.delete_selected_item)
         self.btn_delete.pack()
         # button to clear labels
         self.btn_clear = tk.Button(self.frm_labeling, text='Clear Labels', command=self.clear_labels)
@@ -104,6 +104,50 @@ class SADLT(tk.Tk):
         # button to save all the data to a txt file
         self.btn_save_labels = tk.Button(self.frm_labeling, text='Save', command=self.saveLabels)
         self.btn_save_labels.pack()
+
+        self.frm_move = tk.Frame(self.frm_labeling)
+        self.frm_move.pack()
+
+        self.lbl_move = tk.Label(self.frm_move, text='Control Bounding Box position', width=30)
+        self.lbl_move.grid(columnspan=3, column=0, row=0)
+        # button to move right
+        self.btn_move_right = tk.Button(self.frm_move, text='Right', width=6,
+                                        command=lambda: self.translateBboxHorizontally(1))
+        self.btn_move_right.grid(column=2, row=2)
+        # button to move left
+        self.btn_move_left = tk.Button(self.frm_move, text='Left', width=6,
+                                       command=lambda: self.translateBboxHorizontally(-1))
+        self.btn_move_left.grid(column=0, row=2)
+        # button to move down
+        self.btn_move_down = tk.Button(self.frm_move, text='Down', width=6,
+                                       command=lambda: self.translateBboxVertically(1))
+        self.btn_move_down.grid(column=1, row=3)
+        # button to move up
+        self.btn_move_up = tk.Button(self.frm_move, text='Up', width=6,
+                                     command=lambda: self.translateBboxVertically(-1))
+        self.btn_move_up.grid(column=1, row=1)
+        # frame to contain the control for expanding/contracting the selected bbox
+        self.frm_transform = tk.Frame(self.frm_labeling)
+        self.frm_transform.pack()
+        # label for information
+        self.lbl_transform = tk.Label(self.frm_transform, text='Control Bounding Box Morphology', width=30)
+        self.lbl_transform.grid(column=0, columnspan=3, row=0)
+        # button to expand width
+        self.btn_expand_width = tk.Button(self.frm_transform, text='Width+', width=6,
+                                          command=lambda: self.changeBboxWidth(1))
+        self.btn_expand_width.grid(column=2, row=2)
+        # button to cotract width
+        self.btn_contract_width = tk.Button(self.frm_transform, text='Width-', width=6,
+                                            command=lambda: self.changeBboxWidth(-1))
+        self.btn_contract_width.grid(column=0, row=2)
+        # button to expand height
+        self.btn_expand_height = tk.Button(self.frm_transform, text='Height+', width=6,
+                                           command=lambda: self.changeBboxHeight(1))
+        self.btn_expand_height.grid(column=1, row=3)
+        # button to cotract height
+        self.btn_contract_height = tk.Button(self.frm_transform, text='Height-', width=6,
+                                             command=lambda: self.changeBboxHeight(-1))
+        self.btn_contract_height.grid(column=1, row=1)
     
     def lbx_files_on_select(self, event):
         """Event handler for the file listbox
@@ -255,6 +299,30 @@ class SADLT(tk.Tk):
             self._y_origin.set(event.y)
         except Exception as error:  # catch and call error handling
             self.handleError(error)
+
+    def changeBboxHeight(self, margin):
+        selected = self.lbx_detected.curselection()
+        if selected:
+            index = selected[0]
+            self._internal_detections[index].changeHeight(margin)
+
+    def changeBboxWidth(self, margin):
+        selected = self.lbx_detected.curselection()
+        if selected:
+            index = selected[0]
+            self._internal_detections[index].changeWidth(margin)
+
+    def translateBboxHorizontally(self, margin):
+        selected = self.lbx_detected.curselection()
+        if selected:
+            index = selected[0]
+            self._internal_detections[index].translateHorizontally(margin)
+
+    def translateBboxVertically(self, margin):
+        selected = self.lbx_detected.curselection()
+        if selected:
+            index = selected[0]
+            self._internal_detections[index].translateVertically(margin)
 
     def saveLabels(self): # saves the labels to a file, with a name fitting the corresponding image
         # try:
