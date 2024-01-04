@@ -1,4 +1,0 @@
-required libraries:
-    - Tkinter
-
-Im currently reading up on a tutorial for making a conda install script

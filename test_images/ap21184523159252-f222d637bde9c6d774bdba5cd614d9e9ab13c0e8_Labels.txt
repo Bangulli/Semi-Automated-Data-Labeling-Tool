@@ -1,3 +1,0 @@
-label, x origin, y origin, width, height
-person, 78.0, 147.0, 475.0, 382.0
-person, 654.0, 269.0, 57.0, 90.0
