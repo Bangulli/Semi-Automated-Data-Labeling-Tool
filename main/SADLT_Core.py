@@ -1,7 +1,7 @@
 import torch
 
 # This script is for the core functions, basically the backend
-# put the methods for applying the neural net and saving and shit here
+# Methods for applying the neural net and saving
 class bbox():
     def __init__(self, x, y, w, h, canvas, label, identifier, color, vis=False):
         """
