@@ -84,7 +84,7 @@ class SADLT(tk.Tk):
         # sub frame for controls of labeling tools
         self.frm_labeling = tk.Frame(self.frm_display)
         self.frm_labeling.pack(side=tk.LEFT, anchor=tk.N)
-        # listbox that contains the found frames. select one for further processing like moving and shit
+        # listbox that contains the found frames. select one for further processing. 
         self.lbx_detected = tk.Listbox(self.frm_labeling, height=20, width=40, selectmode=tk.SINGLE, exportselection=False)
         self.lbx_detected.pack()
         # frame for the creation controls
