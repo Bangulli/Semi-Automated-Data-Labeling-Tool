@@ -1,17 +1,25 @@
-# Free-Trip-to-ROME
+# SADLT - (S)emi (A)utomated (D)ata (L)abeling (T)ool
 
 ## Project Overview
-Semi-Automated Data Labeloing Tool is a project that aims to create semi-automated image labeling model that user can edit and add label of object withinn image by themselves.
+The Semi-Automated Data Labeling Tool (SADLT) is a Python-based application built using Tkinter and OpenCV, designed to facilitate the annotation of bounding boxes in images for object detection tasks. This tool provides a set of core functions for working in computer vision applications, allowing users to create, manipulate, and save labels. 
+It provides a graphical user interface (GUI) for loading images, creating bounding boxes, selecting visual elements on a canvas and saving labeled data. This tool incorporates the "You Only Look Once" YOLOv5 model, a real time instance segmentation model deployed by Ultralytics, pretrained on COCO, a large-scale object detection, segmentation, and captioning dataset, for semi-automated annotation.
 
 ## Features
-This project has several features:
-  - Import an image with object labeling from local.
-  -  Build-in pretrained for labeling.
-  -  Can an manually select object of interest on the image to see the label and edit it.
-  -  There is bounding box cover the area of object of interest. The bounding box can be resize by use button l/r+u/d to manipulate.
-  -  Store corrected labels and features into database.
+*   **User-Friendly Interface:** An intuitive GUI allows users to load images, create bounding boxes, and manipulate annotations easily.
+*   **Detection Model Integration:** The tool integrates the COCO object detection model (yolov5s) to assist users in automating the initial annotation process.
+*   **BBox Creation and Manipulation:** Easily create bounding boxes by clicking and dragging on the canvas. Users can adjust the dimensions, position, and labels of bounding boxes dynamically within the application using intuitive controls.
+*   **Labeling Tool:** Assign labels to bounding boxes using a user-friendly interface. Supports the creation, modification, and deletion of labels.
+*   **Label Persistence:** The tool saves and loads annotations, enabling users to resume labeling tasks seamlessly.
+
      
 ## Installation and Setup
+### Prerequisites
+
+*   [Python](https://www.python.org/) (3.6 or later)
+*   [Anaconda](https://www.anaconda.com/) or Miniconda
+
+### Running the Application
+
 To install and set up the project on your local machine, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/Bangulli/Semi-Automated-Data-Labeling-Tool.git`
@@ -21,7 +29,30 @@ To install and set up the project on your local machine, follow these steps:
 
 ## Usage
 
+1.  **Loading Images:**
+    
+*   Click the "Browse" button to select the working directory containing images (PNG, JPG, JPEG).
+*   Click on an image in the list to load it into the canvas.
+
+2.  **Manual Annotation:**
+    
+*   Left-click and drag to draw bounding boxes manually.
+*   Adjust box dimensions and labels using the provided controls.
+*   To modify the position of an existing bounding box:
+    *   Click on the desired bounding box in the "Detected Frames" list.
+    *   Utilize the "Control Bounding Box Position" section to move the selected bounding box horizontally or vertically.
+
+3.  **COCO Detection:**
+    
+*   Click "COCO Detection" to run the object detection model on the current image.
+*   Detected objects will be displayed as bounding boxes on the canvas.
+
+4.  **Saving Annotations:**
+    
+*   Click "Save" to save the annotations in a text file corresponding to the image.
 
 
-## Contact
-If you have any questions, feel free to contact to me at ...
+
+## Acknowledgments
+*   The COCO object detection model used in this tool is based on [yolov5](https://pytorch.org/hub/ultralytics_yolov5/).
+
