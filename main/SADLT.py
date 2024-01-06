@@ -23,8 +23,6 @@ class SADLT(tk.Tk):
 
         # Initialize the background file that logs errors and such. Dont know might be helpful. Also rewrite this comment pls
         self.logger = open(os.path.join(os.getcwd(), 'SADLT_Log_'+datetime.datetime.now().strftime('%d%m%y_%H-%M-%S')+'.txt'), 'w')
-        # a flag to signify automatic log saving
-        self.save_log = False
 
         # init the AI model
         self.model = COCODetection()
@@ -56,10 +54,6 @@ class SADLT(tk.Tk):
         """
         Method for creating the widgets and packing them into the app.
         """
-        # out of frame stuff
-        self.lbl_msg = tk.Label(self, text='You won a free trip to Rome')
-        self.lbl_msg.pack()
-
         self.lbl_failState = tk.Label(self, text='', width=10)
         self.lbl_failState.pack()
 
@@ -300,16 +294,14 @@ class SADLT(tk.Tk):
         """
         Method for file browsing. The path gets returned to a class attribute.
         """
-        try:
-            filename = filedialog.askdirectory(initialdir=self._internal_cwd_path, title="Select a File")
-            # save the path to the internal variable
-            self._internal_cwd_path = filename
-            # delete all entries in the listbox
-            self.lbx_files.delete('0', 'end')
-            # put all the files within on the listbox
-            [self.lbx_files.insert('end', elem) for elem in os.listdir(self._internal_cwd_path) if elem.endswith('.png') or elem.endswith('.jpg') or elem.endswith('.jpeg')]
-        except Exception as error: # catch and call error handling
-            self.handleError(error)
+        filename = filedialog.askdirectory(initialdir=self._internal_cwd_path, title="Select a File")
+        # save the path to the internal variable
+        self._internal_cwd_path = filename
+        # delete all entries in the listbox
+        self.lbx_files.delete('0', 'end')
+        # put all the files within on the listbox
+        [self.lbx_files.insert('end', elem) for elem in os.listdir(self._internal_cwd_path) if elem.endswith('.png') or elem.endswith('.jpg') or elem.endswith('.jpeg')]
+
 
     def loadImage(self): # method for image loading, sets the internal variables for tk and cv2 format images
         # try:
@@ -354,13 +346,11 @@ class SADLT(tk.Tk):
         - label: The label of the bounding box.
         - vis: A boolean indicating whether the bounding box should be visible or not. Default is False.
         """
-        try:
-            identifier = label + str(len(self._internal_detections))
-            newBbox = core.bbox(x, y, w, h, self.cnv_main, label, identifier, self.colors[self._label_types.index(label)], vis)
-            self._internal_detections.append(newBbox)
-            self.lbx_detected.insert('end', newBbox.identifier)
-        except Exception as error:
-            self.handleError(error)
+        identifier = label + str(len(self._internal_detections))
+        newBbox = core.bbox(x, y, w, h, self.cnv_main, label, identifier, self.colors[self._label_types.index(label)], vis)
+        self._internal_detections.append(newBbox)
+        self.lbx_detected.insert('end', newBbox.identifier)
+
 
     def getCoordsFromCanvas(self, event):
         """
@@ -373,11 +363,9 @@ class SADLT(tk.Tk):
         Raises:
             Exception: If an error occurs during the execution of the method.
         """
-        try:
-            self._x_origin.set(event.x)
-            self._y_origin.set(event.y)
-        except Exception as error:
-            self.handleError(error)
+        self._x_origin.set(event.x)
+        self._y_origin.set(event.y)
+
 
     def changeBboxHeight(self, margin):
         """
@@ -453,20 +441,13 @@ class SADLT(tk.Tk):
         # except Exception as error:  # catch and call error handling
         #     self.handleError(error)
 
-    def handleError(self, error): # error handling, logs error and updates in app signifier, set log saver true
-        self.logger.write(datetime.datetime.now().strftime('%H:%M:%S')+' - Caught an Exception of type '+ type(error).__name__ + ' with message: '+str(error)+'\n')
-        self.lbl_failState.config(text='Failed', bg='red', width=10)
-        self.save_log = True
-
     def coco_detection(self):
         """Predict bboxes using the COCO detection model from loaded image and display them in the canvas
         """
-        try:
-            self.cnv_main.delete('bbox')
-            result = self.model.detect(self._internal_working_image_cv2)
-            [self.createBbox(elem[0], elem[1], elem[2]-elem[0], elem[3]-elem[1], self.model.classes[int(elem[5])]) for elem in result]
-        except Exception as error:
-            self.handleError(error)
+        self.cnv_main.delete('bbox')
+        result = self.model.detect(self._internal_working_image_cv2)
+        [self.createBbox(elem[0], elem[1], elem[2]-elem[0], elem[3]-elem[1], self.model.classes[int(elem[5])]) for elem in result]
+
 
 # Mainloop. When the script is called this part of the script runs
 if __name__ == '__main__':
@@ -474,11 +455,3 @@ if __name__ == '__main__':
     app.state('zoomed') # open in fullscreen mode
     app.title('SADLT - (S)emi (A)utomated (D)ata (L)abeling (T)ool') # set the name
     app.mainloop() # call mainloop
-
-    # this happens after the window has been closed
-    if app.save_log: # save log file automatically if something has happened
-        app.logger.write(datetime.datetime.now().strftime('%H:%M:%S')+' - exited the application normally') # log exit
-        app.logger.close()  # save logger
-    else: # just delete the log file for now so we dont get too much garbage in the directories
-        app.logger.close()
-        os.remove(app.logger.name)
