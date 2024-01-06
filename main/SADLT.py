@@ -21,7 +21,7 @@ class SADLT(tk.Tk):
     def __init__(self): # Constructor
         tk.Tk.__init__(self) # Call constructor inherited from tk to create window
 
-        # Initialize the background file that logs errors and such. Dont know might be helpful. Also rewrite this comment pls
+        # Initialize the background file that logs errors.
         self.logger = open(os.path.join(os.getcwd(), 'SADLT_Log_'+datetime.datetime.now().strftime('%d%m%y_%H-%M-%S')+'.txt'), 'w')
 
         # init the AI model
