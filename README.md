@@ -54,7 +54,6 @@ To install and set up the project on your local machine, follow these steps:
 *   Click "Save" to save the annotations in a text file corresponding to the image.
 
 ## Contributors
-, , , 	Quan Huy Tran, 
 1. [Jose Andres Herrera](https://github.com/joanhermo)
 2. [Sirada Kittipaisarnkul](https://github.com/99ffx)
 3. [Paola Vasquez](https://github.com/paolavasquez98)
