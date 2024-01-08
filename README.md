@@ -3,6 +3,8 @@
 ## Project Overview
 The Semi-Automated Data Labeling Tool (SADLT) is a Python-based application built using Tkinter and OpenCV, designed to facilitate the annotation of bounding boxes in images for object detection tasks. This tool provides a set of core functions for working in computer vision applications, allowing users to create, manipulate, and save labels. 
 It provides a graphical user interface (GUI) for loading images, creating bounding boxes, selecting visual elements on a canvas and saving labeled data. This tool incorporates the "You Only Look Once" YOLOv5 model, a real time instance segmentation model deployed by Ultralytics, pretrained on COCO, a large-scale object detection, segmentation, and captioning dataset, for semi-automated annotation.
+![Image Description](demo.png)
+
 
 ## Features
 *   **User-Friendly Interface:** An intuitive GUI allows users to load images, create bounding boxes, and manipulate annotations easily.
